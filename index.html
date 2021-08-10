@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dino Game</title>
+  <link rel="stylesheet" href="./style.css">
+  <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
+</head>
+<body>
+  <div id="instructions">Instructions :
+    <p>The objective of this game is to score as much as possible by jumping over obstacles.</p>
+    <p>1. "W" or "Up-Arrow" key to jump.</p>
+    <p>2. "Space button" to pause the game.</p>
+    <p>3. "Left-click" on restart button to play again, if the game gets over.</p>
+  </div>
+  <div id="score">Score/Highest_Score : <span id="score1"></span>/<span id="score2"></span></div>
+  <div id="gameScreen">
+    <div id="cloud"></div>
+    <div id="bird"></div>
+    <div id="cactus"></div>
+    <div id="dino"></div>
+    <div id="floorID"></div>
+    <div id="gameOver">
+      <img id="gameOver1" onclick="resume()"></img>
+      <br>
+      <img id="gameOver2"></img>
+    </div>
+    </div>
+  </div>
+</body>
+<script type="text/javascript">
+  var state=0;
+  var stateB=0;
+  var mxNoOfStates=3;
+  var mxNoOfStatesB=2;
+  var delCloud=2;
+  var delBird=8;
+  var delCactus=18;
+  var cloudIntro=0;
+  var birdIntro=0;
+  var cactusIntro=0;
+  var lt_injectCloud=30;
+  var lt_injectBird=50;
+  var lt_injectCactus=20;
+  /*************************************************/
+  var score=0;
+  var highestScore=0;
+  /*************************************************/
+  var dinoTop=356;
+  var dinoLeft=5;
+  /************************************************/
+  var sign=1;
+  var pause_=0;
+  var end_=0;
+  /************************************************/
+  var cloudPos=[];
+  var birdPos=[];
+  var cactusPos=[];
+
+
+  document.onkeydown=function(e){
+    if(e.keyCode==38 || e.keyCode==87){
+      if(dinoTop==356)sign=-1;
+    }
+    if(e.keyCode==32){
+      pause_=1-pause_;
+    }
+    else console.log(e.keyCode);
+  }
+  function generateRandomNumber(_max_,_min_){
+    return Math.random()*(_max_-_min_)+_min_;
+  }
+  function injectCloud(){
+    cloudIntro++;
+    if(cloudIntro>=lt_injectCloud){
+      cloudIntro=0;
+      lt_injectCloud=generateRandomNumber(70,30);
+      cloudPos.push({top:generateRandomNumber(300,10),left:750});
+    }
+  }
+  function resume(){
+    end_=0;
+    score=0;
+    document.getElementById('gameOver1').src="";
+    document.getElementById('gameOver2').src="";
+    cloudPos.splice(0,cloudPos.length);
+    birdPos.splice(0,birdPos.length);
+    cactusPos.splice(0,cactusPos.length);
+  }
+  function injectBird(){
+      birdIntro++;
+      if(birdIntro>=lt_injectBird){
+        birdIntro=0;
+        lt_injectBird=generateRandomNumber(70,50);
+        birdPos.push({top:generateRandomNumber(260,10),left:750});
+      }
+  }
+  function injectCactus(){
+    cactusIntro++;
+    if(cactusIntro>=lt_injectCactus){
+      cactusIntro=0;
+      lt_injectCactus=generateRandomNumber(45,15);
+      cactusPos.push({top:356,left:750});
+    }
+  }
+  function drawBird(){
+    stateB=(stateB+1)%mxNoOfStatesB;
+    document.getElementById('bird').innerHTML="";
+    for(var iter=0;iter<birdPos.length;iter++){
+      birdPos[iter].left-=delBird;
+      if(birdPos[iter].left<0)birdPos.splice(iter,1);
+      document.getElementById('bird').innerHTML+=
+        `<div class="bird" style="top:${birdPos[iter].top}px;left:${birdPos[iter].left}px;background:url('assets/bird${stateB}.png') no-repeat"></div>`
+    }
+  }
+  function drawDino(){
+    state=(state+1)%mxNoOfStates;
+    document.getElementById('dino').innerHTML="";
+    document.getElementById('dino').innerHTML+=
+      `<div class="dino" style="background:url('assets/dino${state}.png');top:${dinoTop}px"></div>`;
+  }
+  function drawCloud(){
+    document.getElementById('cloud').innerHTML="";
+    for(var iter=0;iter<cloudPos.length;iter++){
+      cloudPos[iter].left-=delCloud;
+      if(cloudPos[iter].left<0)cloudPos.splice(iter,1);
+      document.getElementById('cloud').innerHTML+=
+        `<div class="cloud" style="top:${cloudPos[iter].top}px;left:${cloudPos[iter].left}px"></div>`;
+      }
+  }
+  function drawCactus(){
+    document.getElementById('cactus').innerHTML="";
+    for(var iter=0;iter<cactusPos.length;iter++){
+      cactusPos[iter].left-=delCactus;
+      if(cactusPos[iter].left<0){
+        cactusPos.splice(iter,1);
+        score++;
+      }
+      document.getElementById('cactus').innerHTML+=
+        `<div class="cactus" style="background: url('assets/tree1.png') no-repeat;top:${cactusPos[iter].top}px;left:${cactusPos[iter].left}px"></div>`
+    }
+  }
+  function detectCollision(){
+    for(var i=0;i<cactusPos.length;i++){
+      if(cactusPos[i].left<=50 && !(cactusPos[i].top>=(dinoTop+44))){//50 is the width-of dinosaur.
+        end_=1;
+        if(highestScore<=score)highestScore=score;
+      }
+    }
+  }
+  function moveDino(){
+    if(sign==-1){
+      if(dinoTop<=281)sign=1;
+      else dinoTop-=25;
+    }
+    else if(sign==1){
+      if(dinoTop>=356)sign=1;
+      else dinoTop+=25;
+    }
+  }
+  function updateScore(){
+    document.getElementById('score1').innerHTML="";
+    document.getElementById('score1').innerHTML+=score;
+    document.getElementById('score2').innerHTML="";
+    document.getElementById('score2').innerHTML+=highestScore;
+  }
+  function gameloop(){
+    injectCloud();
+    injectBird();
+    injectCactus();
+    moveDino();
+    updateScore();
+    detectCollision();
+    drawBird();
+    drawCloud();
+    drawCactus();
+    drawDino();
+  }
+  var timerCnt=0;
+  function timer(){
+    setTimeout(timer,1);
+    if(pause_ || end_){
+      timerCnt=0;
+      if(end_){
+        document.getElementById('gameOver1').src="./assets/restartButton.png";
+        document.getElementById('gameOver2').src="./assets/gameOver.png";
+      }
+    }
+    else{
+      timerCnt++;
+      if(timerCnt==30){
+        timerCnt=0;
+        gameloop();
+      }
+    }
+  }
+  timer();
+</script>
+</html>
